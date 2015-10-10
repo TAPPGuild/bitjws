@@ -24,7 +24,7 @@ Use this package to produce signed JWS messages using the Bitcoin message signin
 where "kid" is used to indicate the public part of the key used during signing.
 
 
-###### Sign a message
+##### Sign a message
 
 ```python
 import bitjws
@@ -54,7 +54,7 @@ def sign_serialize(privkey, expire_after=3600, requrl=None, **kwargs):
 ```
 
 
-###### Validate a message
+##### Validate a message
 
 ```python
 import bitjws
@@ -73,6 +73,6 @@ def validate_deserialize(rawmsg, requrl=None):
 ```
 
 
-###### Utilities and other functionality
+##### Utilities and other functionality
 
 Check `tests/` and `example/` for other functions available but not documented above.
