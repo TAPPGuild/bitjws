@@ -11,14 +11,23 @@ def test_encode_decode():
     origheader = bitjws.base64url_decode(rawheader.encode('utf8'))
     origpayload = bitjws.base64url_decode(rawpayload.encode('utf8'))
 
+    assert header['typ'] == 'JWT'
+    assert header['alg'] == 'CUSTOM-BITCOIN-SIGN'
+    assert header['kid'] == bitjws.pubkey_to_addr(key.pubkey.serialize())
+    assert len(header) == 3
     assert header == json.loads(origheader.decode('utf8'))
+
+    assert isinstance(payload.get('exp', ''), float)
+    assert payload['aud'] is None
+    assert len(payload) == 2
     assert payload == json.loads(origpayload.decode('utf8'))
 
 def test_audience():
     key = bitjws.PrivateKey()
 
-    ser = bitjws.sign_serialize(key, requrl='https://example.com/api/login')
-    header, payload = bitjws.validate_deserialize(
-        ser, requrl='https://example.com/api/login')
+    audience = 'https://example.com/api/login'
+    ser = bitjws.sign_serialize(key, requrl=audience)
+    header, payload = bitjws.validate_deserialize(ser, requrl=audience)
     assert header is not None
     assert payload is not None
+    assert payload['aud'] == audience
