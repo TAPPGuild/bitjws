@@ -4,7 +4,7 @@ JWS using Bitcoin message signing
 
 ## Requirements
 
-Install [secp256k1](https://github.com/bitcoin/secp256k1) before proceeding.
+Install [secp256k1](https://github.com/bitcoin/secp256k1) before proceeding; make sure to run `./configure --enable-module-recovery`.
 
 
 ## Usage
