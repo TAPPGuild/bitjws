@@ -1,5 +1,7 @@
 from setuptools import setup
 
+readme = open('./README.md').read()
+
 classifiers = [
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 2",
@@ -12,11 +14,13 @@ setup(
     name="bitjws",
     version="0.1.0",
     description='JWS using Bitcoin message signing',
+    long_description=readme,
     author='Guilherme Polo',
     author_email='gp@deginner.com',
     url='https://github.com/g-p-g/bitjws',
     license='MIT',
     classifiers=classifiers,
+    include_package_data=True,
     packages=['bitjws'],
     setup_requires=['pytest-runner'],
     install_requires=['base58', 'secp256k1'],
