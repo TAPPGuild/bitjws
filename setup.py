@@ -20,5 +20,5 @@ setup(
     packages=['bitjws'],
     setup_requires=['pytest-runner'],
     install_requires=['base58', 'secp256k1'],
-    tests_require=['pytest']
+    tests_require=['pytest', 'pytest-cov']
 )
