@@ -69,3 +69,8 @@ def validate_deserialize(rawmsg, requrl=None):
     payload if the signature is good.
     """
 ```
+
+
+###### Utilities and other functionality
+
+Check `tests/` and `example/` for other functions available but not documented above.
