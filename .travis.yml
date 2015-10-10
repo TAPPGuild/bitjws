@@ -23,12 +23,13 @@ before_install:
   - virtualenv ENV
   - source ENV/bin/activate
   - pip install -U pip setuptools cffi coverage coveralls
+  - LIB_DIR=./libsecp256k1/.libs INCLUDE_DIR=./libsecp256k1/include pip install secp256k1
 
 install:
-  - LIB_DIR=./libsecp256k1/.libs INCLUDE_DIR=./libsecp256k1/include python setup.py -q install
+  - python setup.py -q install
 
 script:
-  - LD_LIBRARY_PATH=./libsecp256k1/.libs LIB_DIR=./libsecp256k1/.libs INCLUDE_DIR=./libsecp256k1/include coverage run --source=bitjws setup.py pytest
+  - LD_LIBRARY_PATH=./libsecp256k1/.libs coverage run --source=bitjws setup.py pytest
 
 after_success:
   - coveralls
