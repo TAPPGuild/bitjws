@@ -1,0 +1,34 @@
+language: python
+python:
+  - "2.7"
+  - "3.3"
+
+sudo: false
+
+addons:
+  apt:
+    packages:
+      - git
+      - libtool
+      - autoconf
+      - automake
+
+before_install:
+  - git clone git://github.com/bitcoin/secp256k1.git libsecp256k1
+  - pushd libsecp256k1
+  - ./autogen.sh
+  - ./configure --enable-module-recovery --enable-module-ecdh --enable-module-schnorr
+  - make
+  - popd
+  - virtualenv ENV
+  - source ENV/bin/activate
+  - pip install -U pip setuptools cffi coverage coveralls
+
+install:
+  - LIB_DIR=./libsecp256k1/.libs INCLUDE_DIR=./libsecp256k1/include python setup.py -q install
+
+script:
+  - LD_LIBRARY_PATH=./libsecp256k1/.libs LIB_DIR=./libsecp256k1/.libs INCLUDE_DIR=./libsecp256k1/include coverage run --source=bitjws setup.py pytest
+
+after_success:
+  - coveralls
