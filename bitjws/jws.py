@@ -100,6 +100,8 @@ def sign_serialize(privkey, expire_after=3600, requrl=None, **kwargs):
     payload if it is not delivered to the proper place, e.g. if requrl
     is set to https://example.com/api/login but sent to a different server
     or path then the receiving server should reject it.
+
+    Any other parameters are passed as is to the payload.
     """
     assert expire_after > 0
     addy = crypto.pubkey_to_addr(privkey.pubkey.serialize())
