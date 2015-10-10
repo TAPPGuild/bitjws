@@ -20,9 +20,7 @@ before_install:
   - ./configure --enable-module-recovery --enable-module-ecdh --enable-module-schnorr
   - make
   - popd
-  - virtualenv ENV
-  - source ENV/bin/activate
-  - pip install -U pip setuptools cffi coverage coveralls
+  - pip install -U setuptools cffi coverage coveralls
   - INCLUDE_DIR=$(readlink -f ./libsecp256k1/include) LIB_DIR=$(readlink -f ./libsecp256k1/.libs) pip install secp256k1
 
 install:
