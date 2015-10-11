@@ -15,4 +15,4 @@ def test_verify():
 def test_badkey():
     key = gen_privatekey()
     with pytest.raises(TypeError):
-        privkey = PrivateKey(key[:-1])
+        PrivateKey(key[:-1])

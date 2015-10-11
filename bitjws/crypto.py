@@ -1,7 +1,6 @@
 import os
 import base64
 import hashlib
-import binascii
 from struct import pack
 from collections import namedtuple
 

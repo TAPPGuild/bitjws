@@ -38,3 +38,20 @@ def test_audience():
     assert header is not None
     assert payload is not None
     assert payload['aud'] == audience
+
+
+# Exercise the varint function a little bit.
+
+def test_slightly_big():
+    key = bitjws.PrivateKey()
+
+    ser = bitjws.sign_serialize(key, test='a' * 254)
+    h, p = bitjws.validate_deserialize(ser)
+    assert h and p
+
+def test_big():
+    key = bitjws.PrivateKey()
+
+    ser = bitjws.sign_serialize(key, test='a' * 65536)
+    h, p = bitjws.validate_deserialize(ser)
+    assert h and p
