@@ -22,6 +22,11 @@ def test_payload_expired():
         # payload expired.
         bitjws.validate_deserialize(ser)
 
+    # But the signature can still be verified and the msg decoded
+    # if expiration checks are disabled.
+    h, p = bitjws.validate_deserialize(ser, check_expiration=False)
+    assert h and p
+
 def test_invalid_audience():
     key = bitjws.PrivateKey()
     print(bitjws.privkey_to_wif(key.private_key))
@@ -74,6 +79,9 @@ def test_invalid_header():
     header, payload = bitjws.validate_deserialize(ser)
     assert header is not None
     assert payload is not None
+    h, p = bitjws.validate_deserialize(ser, check_expiration=False)
+    assert h == header
+    assert p == payload
 
 
 def test_malformed():

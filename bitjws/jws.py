@@ -116,10 +116,13 @@ def sign_serialize(privkey, expire_after=3600, requrl=None, **kwargs):
     return "{}.{}".format(signdata, signature)
 
 
-def validate_deserialize(rawmsg, requrl=None):
+def validate_deserialize(rawmsg, requrl=None, check_expiration=True):
     """
     Validate a JWT compact serialization and return the header and
     payload if the signature is good.
+
+    If check_expiration is False, the payload will be accepted even if
+    expired.
     """
     segments = rawmsg.split('.')
     if len(segments) != 3 or not all(segments):
@@ -144,7 +147,7 @@ def validate_deserialize(rawmsg, requrl=None):
         raise InvalidMessage('failed to verify signature: {}'.format(err))
 
     if valid:
-        _verify_payload(payload, requrl)
+        _verify_payload(payload, check_expiration, requrl)
         return header, payload
     else:
         return None, None
@@ -161,8 +164,8 @@ def _verify_signature(data, header, signature):
     return crypto.verify(signature, data, address)
 
 
-def _verify_payload(payload, url=None):
-    if payload.get('exp', 0) - time.time() < 0:
+def _verify_payload(payload, check_expiration, url=None):
+    if check_expiration and payload.get('exp', 0) - time.time() < 0:
         raise InvalidPayload('payload expired')
 
     audience = payload.get('aud', None)

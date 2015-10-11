@@ -65,10 +65,13 @@ header, payload = bitjws.validate_deserialize(data)
 `validate_deserialize` may raise `bitjws.InvalidMessage` or `bitwjs.InvalidPayload`. Function definition:
 
 ```python
-def validate_deserialize(rawmsg, requrl=None):
+def validate_deserialize(rawmsg, requrl=None, check_expiration=True):
     """
     Validate a JWT compact serialization and return the header and
     payload if the signature is good.
+
+    If check_expiration is False, the payload will be accepted even if
+    expired.
     """
 ```
 
