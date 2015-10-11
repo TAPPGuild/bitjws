@@ -130,12 +130,14 @@ def test_bad_signature():
     # Drop another byte.
     ser = ser[:-1]
     with pytest.raises(bitjws.jws.InvalidMessage):
-        # Now the bitcoin signature encoded in the signature
-        # segment cannot be decoded as base64.
+        # Although it can be decoded now, the length is incorrect.
         bitjws.validate_deserialize(ser)
 
-    ser = ser[:-4]
+    # Replace the signature by something that has the correct
+    # length before decoding but becomes invalid after it.
+    dummy = bitjws.base64url_encode(b'a' * 88)
+    ser = ser[:ser.rfind('.')] + '.' + dummy.decode('utf8')
     with pytest.raises(bitjws.jws.InvalidMessage):
-        # Now it fails because after the bitcoin signature
-        # due to invalid signature length.
+        # Now it fails because the dummy signature above produces
+        # 66 bytes (instead of 65) after being decoded.
         bitjws.validate_deserialize(ser)

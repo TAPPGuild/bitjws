@@ -91,6 +91,9 @@ def pubkey_to_addr(pubkey, net=BC):
 
 
 def verify(base64sig, msg, address, ctx=None, net=BC):
+    if len(base64sig) != 88:
+        raise Exception("Invalid base64 signature length")
+
     msg = msg.encode('utf8')
     fullmsg = (varint(len(net.msgprefix)) + net.msgprefix +
                varint(len(msg)) + msg)

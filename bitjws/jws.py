@@ -140,8 +140,6 @@ def validate_deserialize(rawmsg, requrl=None):
             '{}.{}'.format(header64, payload64),
             header,
             signature)
-    except binascii.Error as err:
-        raise InvalidMessage('failed to decode signature: {}'.format(err))
     except Exception as err:
         raise InvalidMessage('failed to verify signature: {}'.format(err))
 

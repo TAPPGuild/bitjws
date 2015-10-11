@@ -1,4 +1,5 @@
-from bitjws import crypto
+import pytest
+from bitjws import PrivateKey, crypto, gen_privatekey
 
 def test_verify():
     address = "1Jz43WvRgwRdvDzezbWdcSBfUuHSqtMSVx"
@@ -10,3 +11,8 @@ def test_verify():
     b64sig = b"HwLwlzQQ/d4MM4hoi4a6QI8VffNKTmJaAyQR/QEcZAe8tyZGeCIBblkI+BPqWB81IzD4Iquc7DnB905Cn06gGZ0="
     msg = "test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test"
     assert crypto.verify(b64sig, msg, address)
+
+def test_badkey():
+    key = gen_privatekey()
+    with pytest.raises(TypeError):
+        privkey = PrivateKey(key[:-1])
