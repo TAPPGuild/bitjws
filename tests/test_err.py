@@ -149,3 +149,99 @@ def test_bad_signature():
         # Now it fails because the dummy signature above produces
         # 66 bytes (instead of 65) after being decoded.
         bitjws.validate_deserialize(ser)
+
+def test_multisig_missingkeys():
+    key = bitjws.PrivateKey()
+
+    ser = bitjws.multisig_sign_serialize([key])
+    # This should work.
+    headers, payload = bitjws.multisig_validate_deserialize(ser)
+    assert len(headers) == 1 and payload
+
+    serobj = json.loads(ser)
+
+    payload = serobj.pop('payload')
+    ser = json.dumps(serobj)
+    with pytest.raises(bitjws.jws.InvalidMessage):
+        # Key 'payload' is missing.
+        bitjws.multisig_validate_deserialize(ser)
+
+    serobj['payload'] = payload
+    signatures = serobj.pop('signatures')
+    ser = json.dumps(serobj)
+    with pytest.raises(bitjws.jws.InvalidMessage):
+        # Key 'signatures' is missing.
+        bitjws.multisig_validate_deserialize(ser)
+
+    serobj['signatures'] = 'hello'
+    ser = json.dumps(serobj)
+    with pytest.raises(bitjws.jws.InvalidMessage):
+        # 'signatures' is not a list.
+        bitjws.multisig_validate_deserialize(ser)
+
+    del serobj['signatures']
+    del serobj['payload']
+    ser = json.dumps(serobj)
+    with pytest.raises(bitjws.jws.InvalidMessage):
+        bitjws.multisig_validate_deserialize(ser)
+
+    # Remove a key from one of the signatures.
+    serobj['signatures'] = signatures
+    serobj['payload'] = payload
+    sig0 = serobj['signatures'][0].copy()
+
+    del serobj['signatures'][0]['protected']
+    ser = json.dumps(serobj)
+    with pytest.raises(bitjws.jws.InvalidMessage):
+        # data['signatures'][0]['protected'] is missing
+        bitjws.multisig_validate_deserialize(ser)
+
+    serobj['signatures'][0] = sig0.copy()
+    del serobj['signatures'][0]['signature']
+    ser = json.dumps(serobj)
+    with pytest.raises(bitjws.jws.InvalidMessage):
+        # data['signatures'][0]['signture'] is missing
+        bitjws.multisig_validate_deserialize(ser)
+
+    # Remove the only signature entry.
+    serobj['signatures'].pop()
+    ser = json.dumps(serobj)
+    with pytest.raises(bitjws.jws.InvalidMessage):
+        # No signatures.
+        bitjws.multisig_validate_deserialize(ser)
+
+def test_multisig_invalidsig():
+    key = bitjws.PrivateKey()
+
+    ser = bitjws.multisig_sign_serialize([key])
+    assert all(bitjws.multisig_validate_deserialize(ser))
+
+    serobj = json.loads(ser)
+    dummy = bitjws.base64url_encode(b'a' * 88)
+    serobj['signatures'][0]['signature'] = dummy.decode('utf8')
+
+    ser = json.dumps(serobj)
+    with pytest.raises(bitjws.jws.InvalidMessage):
+        # Invalid signature length.
+        bitjws.multisig_validate_deserialize(ser)
+
+def test_multisig_partiallyinvalid():
+    key1 = bitjws.PrivateKey()
+    key2 = bitjws.PrivateKey()
+    key3 = bitjws.PrivateKey()
+
+    ser = bitjws.multisig_sign_serialize([key1, key2, key3])
+    assert all(bitjws.multisig_validate_deserialize(ser))
+
+    serobj = json.loads(ser)
+    # Swap signatures.
+    sig0 = serobj['signatures'][0]['signature']
+    sig1 = serobj['signatures'][1]['signature']
+    sig0, sig1 = sig1, sig0
+    serobj['signatures'][0]['signature'] = sig0
+    serobj['signatures'][1]['signature'] = sig1
+
+    ser = json.dumps(serobj)
+    headers, payload = bitjws.multisig_validate_deserialize(ser)
+    assert headers is None
+    assert payload is None
