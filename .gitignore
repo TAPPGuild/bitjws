@@ -4,4 +4,6 @@
 build/
 dist/
 *.egg
+.eggs/
 __pycache__/
+*.pyc
