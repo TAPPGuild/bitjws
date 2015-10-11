@@ -1,4 +1,5 @@
 import json
+import time
 import bitjws
 
 def test_encode_decode():
@@ -17,10 +18,16 @@ def test_encode_decode():
     assert len(header) == 3
     assert header == json.loads(origheader.decode('utf8'))
 
-    assert isinstance(payload.get('exp', ''), float)
+    assert isinstance(payload.get('exp', ''), (float, int))
     assert payload['aud'] is None
     assert len(payload) == 2
     assert payload == json.loads(origpayload.decode('utf8'))
+
+    # Assumption: it takes mores than 0 seconds to perform the above
+    # instructions but less than 1 second. 3600 is the default
+    # expiration time.
+    diff = 3600 - (payload['exp'] - time.time())
+    assert diff > 0 and diff < 1
 
 def test_audience():
     key = bitjws.PrivateKey()
