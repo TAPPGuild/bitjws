@@ -75,6 +75,20 @@ def validate_deserialize(rawmsg, requrl=None, check_expiration=True):
     """
 ```
 
+##### Multiple signatures
+
+```python
+import bitjws
+
+key1 = bitjws.PrivateKey()
+key2 = bitjws.PrivateKey()
+
+data = bitjws.multisig_sign_serialize([key1, key2])
+headers, payload = bitjws.multisig_validate_deserialize(data)
+```
+
+The other parameters accepted by `multisig_sign_serialize` and `multisig_validate_deserialize` are the same as described for `sign_serialize` and `validate_deserialize`. The data returned and passed to the validate function are different, as the multisig functions use the format described as general JSON in the JWS spec.
+
 
 ##### Utilities and other functionality
 
