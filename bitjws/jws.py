@@ -3,7 +3,10 @@ import time
 import base64
 from collections import namedtuple
 
-from . import crypto
+try:
+    from . import crypto
+except ImportError:
+    crypto = None
 
 __all__ = ['ALGORITHM_AVAILABLE', 'Algorithm',
            'InvalidMessage', 'InvalidPayload', 'base64url_decode',
@@ -13,18 +16,20 @@ __all__ = ['ALGORITHM_AVAILABLE', 'Algorithm',
 
 Algorithm = namedtuple('Algorithm', 'name sign verify pubkey_serialize')
 
-ALGO_BITCOIN_SIGN = 'CUSTOM-BITCOIN-SIGN'
+ALGORITHM_AVAILABLE = {}
 
-CustomBitcoinSign = Algorithm(
-    name=ALGO_BITCOIN_SIGN,
-    sign=crypto.sign,
-    verify=crypto.verify,
-    pubkey_serialize=lambda pubkey: crypto.pubkey_to_addr(pubkey.serialize())
-)
+if crypto:
+    DEFAULT_ALGO = ALGO_BITCOIN_SIGN = 'CUSTOM-BITCOIN-SIGN'
+    CustomBitcoinSign = Algorithm(
+        name=ALGO_BITCOIN_SIGN,
+        sign=crypto.sign,
+        verify=crypto.verify,
+        pubkey_serialize=lambda pub: crypto.pubkey_to_addr(pub.serialize())
+    )
 
-ALGORITHM_AVAILABLE = {
-    ALGO_BITCOIN_SIGN: CustomBitcoinSign
-}
+    ALGORITHM_AVAILABLE[ALGO_BITCOIN_SIGN] = CustomBitcoinSign
+else:
+    DEFAULT_ALGO = None
 
 
 class InvalidMessage(TypeError):
@@ -104,7 +109,7 @@ def _jws_signature(signdata, privkey, algorithm):
 
 
 def sign_serialize(privkey, expire_after=3600, requrl=None,
-                   algorithm_name=ALGO_BITCOIN_SIGN, **kwargs):
+                   algorithm_name=DEFAULT_ALGO, **kwargs):
     """
     Produce a JWT compact serialization by generating a header, payload,
     and signature using the privkey and algorithm specified.
@@ -139,7 +144,7 @@ def sign_serialize(privkey, expire_after=3600, requrl=None,
 
 
 def multisig_sign_serialize(privkeys, expire_after=3600, requrl=None,
-                            algorithm_name=ALGO_BITCOIN_SIGN, **kwargs):
+                            algorithm_name=DEFAULT_ALGO, **kwargs):
     """
     Produce a general JSON serialization by generating a header, payload,
     and multiple signatures using the list of private keys specified.
@@ -178,7 +183,7 @@ def multisig_sign_serialize(privkeys, expire_after=3600, requrl=None,
 
 
 def multisig_validate_deserialize(rawmsg, requrl=None, check_expiration=True,
-                                  algorithm_name=ALGO_BITCOIN_SIGN):
+                                  algorithm_name=DEFAULT_ALGO):
     """
     Validate a general JSON serialization and return the headers and
     payload if all the signatures are good.
@@ -219,7 +224,7 @@ def multisig_validate_deserialize(rawmsg, requrl=None, check_expiration=True,
 
 
 def validate_deserialize(rawmsg, requrl=None, check_expiration=True,
-                         algorithm_name=ALGO_BITCOIN_SIGN):
+                         algorithm_name=DEFAULT_ALGO):
     """
     Validate a JWT compact serialization and return the header and
     payload if the signature is good.
