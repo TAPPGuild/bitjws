@@ -12,7 +12,7 @@ classifiers = [
 
 setup(
     name="bitjws",
-    version="0.4.2",
+    version="0.5.0",
     description='JWS using Bitcoin message signing',
     long_description=readme,
     author='Guilherme Polo',

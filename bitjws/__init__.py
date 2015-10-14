@@ -1,4 +1,5 @@
-from .jws import (InvalidMessage, InvalidPayload, base64url_decode,
+from .jws import (ALGORITHM_AVAILABLE, Algorithm,
+                  InvalidMessage, InvalidPayload, base64url_decode,
                   base64url_encode, sign_serialize, validate_deserialize,
                   multisig_sign_serialize, multisig_validate_deserialize)
 

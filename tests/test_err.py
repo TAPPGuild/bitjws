@@ -27,6 +27,13 @@ def test_payload_expired():
     h, p = bitjws.validate_deserialize(ser, check_expiration=False)
     assert h and p
 
+    # Check with multisig.
+    ser = bitjws.multisig_sign_serialize([key], expire_after=0.01)
+    time.sleep(0.02)
+    with pytest.raises(bitjws.jws.InvalidPayload):
+        # payload expired.
+        bitjws.multisig_validate_deserialize(ser)
+
 def test_invalid_audience():
     key = bitjws.PrivateKey()
     print(bitjws.privkey_to_wif(key.private_key))
@@ -245,3 +252,20 @@ def test_multisig_partiallyinvalid():
     headers, payload = bitjws.multisig_validate_deserialize(ser)
     assert headers is None
     assert payload is None
+
+def test_invalid_algorithm():
+    key1 = bitjws.PrivateKey()
+
+    # Invalid algorithm name for signing.
+    with pytest.raises(AssertionError):
+        bitjws.sign_serialize(key1, algorithm_name='test')
+    with pytest.raises(AssertionError):
+        bitjws.multisig_sign_serialize([key1], algorithm_name='test')
+
+    # Invalid algorithm name for verifying.
+    ser = bitjws.sign_serialize(key1)
+    with pytest.raises(AssertionError):
+        bitjws.validate_deserialize(ser, algorithm_name='test')
+    ser = bitjws.multisig_sign_serialize([key1])
+    with pytest.raises(AssertionError):
+        bitjws.multisig_validate_deserialize(ser, algorithm_name='test')

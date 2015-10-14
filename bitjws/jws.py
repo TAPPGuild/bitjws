@@ -1,15 +1,30 @@
 import json
 import time
 import base64
+from collections import namedtuple
 
 from . import crypto
 
-__all__ = ['InvalidMessage', 'InvalidPayload', 'base64url_decode',
+__all__ = ['ALGORITHM_AVAILABLE', 'Algorithm',
+           'InvalidMessage', 'InvalidPayload', 'base64url_decode',
            'base64url_encode', 'sign_serialize', 'validate_deserialize',
            'multisig_sign_serialize', 'multisig_validate_deserialize']
 
 
-ALGORITHM = 'CUSTOM-BITCOIN-SIGN'
+Algorithm = namedtuple('Algorithm', 'name sign verify pubkey_serialize')
+
+ALGO_BITCOIN_SIGN = 'CUSTOM-BITCOIN-SIGN'
+
+CustomBitcoinSign = Algorithm(
+    name=ALGO_BITCOIN_SIGN,
+    sign=crypto.sign,
+    verify=crypto.verify,
+    pubkey_serialize=lambda pubkey: crypto.pubkey_to_addr(pubkey.serialize())
+)
+
+ALGORITHM_AVAILABLE = {
+    ALGO_BITCOIN_SIGN: CustomBitcoinSign
+}
 
 
 class InvalidMessage(TypeError):
@@ -45,14 +60,14 @@ def base64url_encode(msg):
     return normalb64.replace(b'=', b'')
 
 
-def _jws_header(addy):
+def _jws_header(keyid, algorithm):
     """Produce a base64-encoded JWS header."""
     data = {
         'typ': 'JWT',
-        'alg': ALGORITHM,
+        'alg': algorithm.name,
         # 'kid' is used to indicate the public part of the key
         # used during signing.
-        'kid': addy
+        'kid': keyid
     }
 
     return base64url_encode(json.dumps(data).encode('utf8'))
@@ -79,19 +94,22 @@ def _jws_payload(expire_at, requrl=None, **kwargs):
     return base64url_encode(json.dumps(data).encode('utf8'))
 
 
-def _jws_signature(signdata, privkey):
+def _jws_signature(signdata, privkey, algorithm):
     """
     Produce a base64-encoded JWS signature based on the signdata
-    specified and the bitjws.PrivateKey instance passed.
+    specified, the privkey instance, and the algorithm passed.
     """
-    signature = crypto.sign(privkey, signdata)
+    signature = algorithm.sign(privkey, signdata)
     return base64url_encode(signature)
 
 
-def sign_serialize(privkey, expire_after=3600, requrl=None, **kwargs):
+def sign_serialize(privkey, expire_after=3600, requrl=None,
+                   algorithm_name=ALGO_BITCOIN_SIGN, **kwargs):
     """
     Produce a JWT compact serialization by generating a header, payload,
-    and signature using the privkey specified.
+    and signature using the privkey and algorithm specified.
+
+    The privkey object must contain at least a member named pubkey.
 
     The parameter expire_after is used by the server to reject the payload
     if received after current_time + expire_after.
@@ -103,23 +121,29 @@ def sign_serialize(privkey, expire_after=3600, requrl=None, **kwargs):
 
     Any other parameters are passed as is to the payload.
     """
+    assert algorithm_name in ALGORITHM_AVAILABLE
     assert expire_after > 0
+
+    algo = ALGORITHM_AVAILABLE[algorithm_name]
+
     expire_at = time.time() + expire_after
     payload = _jws_payload(expire_at, requrl, **kwargs).decode('utf8')
 
-    addy = crypto.pubkey_to_addr(privkey.pubkey.serialize())
-    header = _jws_header(addy).decode('utf8')
+    addy = algo.pubkey_serialize(privkey.pubkey)
+    header = _jws_header(addy, algo).decode('utf8')
 
     signdata = "{}.{}".format(header, payload)
-    signature = _jws_signature(signdata, privkey).decode('utf8')
+    signature = _jws_signature(signdata, privkey, algo).decode('utf8')
 
     return "{}.{}".format(signdata, signature)
 
 
-def multisig_sign_serialize(privkeys, expire_after=3600, requrl=None, **kwargs):
+def multisig_sign_serialize(privkeys, expire_after=3600, requrl=None,
+                            algorithm_name=ALGO_BITCOIN_SIGN, **kwargs):
     """
     Produce a general JSON serialization by generating a header, payload,
     and multiple signatures using the list of private keys specified.
+    All the signatures will be performed using the same algorithm.
 
     The parameter expire_after is used by the server to reject the payload
     if received after current_time + expire_after.
@@ -131,17 +155,20 @@ def multisig_sign_serialize(privkeys, expire_after=3600, requrl=None, **kwargs):
 
     Any other parameters are passed as is to the payload.
     """
+    assert algorithm_name in ALGORITHM_AVAILABLE
+    assert expire_after > 0
+
+    algo = ALGORITHM_AVAILABLE[algorithm_name]
     result = {"payload": None, "signatures": []}
 
-    assert expire_after > 0
     expire_at = time.time() + expire_after
     payload = _jws_payload(expire_at, requrl, **kwargs).decode('utf8')
 
     for pk in privkeys:
-        addy = crypto.pubkey_to_addr(pk.pubkey.serialize())
-        header = _jws_header(addy).decode('utf8')
+        addy = algo.pubkey_serialize(pk.pubkey)
+        header = _jws_header(addy, algo).decode('utf8')
         signdata = "{}.{}".format(header, payload)
-        signature = _jws_signature(signdata, pk).decode('utf8')
+        signature = _jws_signature(signdata, pk, algo).decode('utf8')
         result["signatures"].append({
             "protected": header,
             "signature": signature})
@@ -150,7 +177,8 @@ def multisig_sign_serialize(privkeys, expire_after=3600, requrl=None, **kwargs):
     return json.dumps(result)
 
 
-def multisig_validate_deserialize(rawmsg, requrl=None, check_expiration=True):
+def multisig_validate_deserialize(rawmsg, requrl=None, check_expiration=True,
+                                  algorithm_name=ALGO_BITCOIN_SIGN):
     """
     Validate a general JSON serialization and return the headers and
     payload if all the signatures are good.
@@ -158,6 +186,10 @@ def multisig_validate_deserialize(rawmsg, requrl=None, check_expiration=True):
     If check_expiration is False, the payload will be accepted even if
     expired.
     """
+    assert algorithm_name in ALGORITHM_AVAILABLE
+
+    algo = ALGORITHM_AVAILABLE[algorithm_name]
+
     data = json.loads(rawmsg)
     payload64 = data.get('payload', None)
     signatures = data.get('signatures', None)
@@ -166,31 +198,15 @@ def multisig_validate_deserialize(rawmsg, requrl=None, check_expiration=True):
     if not len(signatures):
         raise InvalidMessage('no signatures')
 
-    sigs = []
     try:
-        payload_data = base64url_decode(payload64.encode('utf8'))
-        payload = json.loads(payload_data.decode('utf8'))
-        for entry in signatures:
-            header64 = entry.get('protected', None)
-            cryptoseg64 = entry.get('signature', None)
-            if header64 is None or cryptoseg64 is None:
-                raise InvalidMessage('all signatures must contain "protected"'
-                                     ' and "signature"')
-            signature = base64url_decode(cryptoseg64.encode('utf8'))
-            header_data = base64url_decode(header64.encode('utf8'))
-            header = json.loads(header_data.decode('utf8'))
-            sigs.append({
-                'data': '{}.{}'.format(header64, payload64),
-                'header': header,
-                'signature': signature
-            })
+        payload, sigs = _multisig_decode(payload64, signatures)
     except Exception as err:
         raise InvalidMessage(str(err))
 
     all_valid = True
     try:
         for entry in sigs:
-            valid = _verify_signature(**entry)
+            valid = _verify_signature(algorithm=algo, **entry)
             all_valid = all_valid and valid
     except Exception as err:
         raise InvalidMessage('failed to verify signature: {}'.format(err))
@@ -198,10 +214,12 @@ def multisig_validate_deserialize(rawmsg, requrl=None, check_expiration=True):
     if not all_valid:
         return None, None
 
+    _verify_payload(payload, check_expiration, requrl)
     return [entry['header'] for entry in sigs], payload
 
 
-def validate_deserialize(rawmsg, requrl=None, check_expiration=True):
+def validate_deserialize(rawmsg, requrl=None, check_expiration=True,
+                         algorithm_name=ALGO_BITCOIN_SIGN):
     """
     Validate a JWT compact serialization and return the header and
     payload if the signature is good.
@@ -209,6 +227,9 @@ def validate_deserialize(rawmsg, requrl=None, check_expiration=True):
     If check_expiration is False, the payload will be accepted even if
     expired.
     """
+    assert algorithm_name in ALGORITHM_AVAILABLE
+    algo = ALGORITHM_AVAILABLE[algorithm_name]
+
     segments = rawmsg.split('.')
     if len(segments) != 3 or not all(segments):
         raise InvalidMessage('must contain 3 non-empty segments')
@@ -227,7 +248,8 @@ def validate_deserialize(rawmsg, requrl=None, check_expiration=True):
         valid = _verify_signature(
             '{}.{}'.format(header64, payload64),
             header,
-            signature)
+            signature,
+            algo)
     except Exception as err:
         raise InvalidMessage('failed to verify signature: {}'.format(err))
 
@@ -238,15 +260,19 @@ def validate_deserialize(rawmsg, requrl=None, check_expiration=True):
         return None, None
 
 
-def _verify_signature(data, header, signature):
-    if header.get('alg', None) != ALGORITHM:
-        raise InvalidMessage('unknown algorithm')
+def _verify_signature(data, header, signature, algorithm):
+    alg = header.get('alg', None)
+    if alg is None:
+        raise InvalidMessage('no algorithm defined')
+    if alg != algorithm.name:
+        raise InvalidMessage('expected algorithm {}, received {}'.format(
+            alg, algorithm.name))
 
     address = header.get('kid', '')
     if not address:
         raise InvalidMessage('no address specified (kid)')
 
-    return crypto.verify(signature, data, address)
+    return algorithm.verify(signature, data, address)
 
 
 def _verify_payload(payload, check_expiration, url=None):
@@ -257,3 +283,26 @@ def _verify_payload(payload, check_expiration, url=None):
     if audience != url:
         raise InvalidPayload('audience does not match ({} != {})'.format(
             url, audience))
+
+
+def _multisig_decode(payload64, signatures):
+    payload_data = base64url_decode(payload64.encode('utf8'))
+    payload = json.loads(payload_data.decode('utf8'))
+    sigs = []
+
+    for entry in signatures:
+        header64 = entry.get('protected', None)
+        cryptoseg64 = entry.get('signature', None)
+        if header64 is None or cryptoseg64 is None:
+            raise InvalidMessage('all signatures must contain "protected"'
+                                 ' and "signature"')
+        signature = base64url_decode(cryptoseg64.encode('utf8'))
+        header_data = base64url_decode(header64.encode('utf8'))
+        header = json.loads(header_data.decode('utf8'))
+        sigs.append({
+            'data': '{}.{}'.format(header64, payload64),
+            'header': header,
+            'signature': signature
+        })
+
+    return payload, sigs
