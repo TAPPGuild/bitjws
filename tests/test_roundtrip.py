@@ -39,6 +39,14 @@ def test_audience():
     assert payload is not None
     assert payload['aud'] == audience
 
+def test_empty():
+    # This empty "test" function is here to easily allow testing
+    # for missing libsecp256k1.
+    #
+    # py.test may be instructed to only run this test with the
+    # intention to collect coverage data for `import bitjws`.
+    pass
+
 
 # Exercise the varint function a little bit.
 

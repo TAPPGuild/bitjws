@@ -27,7 +27,8 @@ install:
   - python setup.py -q install
 
 script:
-  - LD_LIBRARY_PATH=$(readlink -f ./libsecp256k1/.libs) python setup.py pytest --addopt --cov=bitjws
+  - LD_LIBRARY_PATH=$(readlink -f ./libsecp256k1/.libs) python setup.py pytest --addopts --cov=bitjws
+  - python setup.py pytest --addopts "-k test_empty --cov=bitjws --cov-append tests/test_roundtrip.py"
 
 after_success:
   - coveralls
