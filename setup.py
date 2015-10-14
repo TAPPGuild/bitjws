@@ -1,6 +1,6 @@
 from setuptools import setup
 
-readme = open('./README.md').read()
+readme = open('./README.rst').read()
 
 classifiers = [
     "License :: OSI Approved :: MIT License",
@@ -12,7 +12,7 @@ classifiers = [
 
 setup(
     name="bitjws",
-    version="0.5.1",
+    version="0.5.2",
     description='JWS using Bitcoin message signing',
     long_description=readme,
     author='Guilherme Polo',
