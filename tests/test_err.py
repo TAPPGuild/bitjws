@@ -12,8 +12,8 @@ def test_payload_expired():
     key = bitjws.PrivateKey()
     print(bitjws.privkey_to_wif(key.private_key))
 
-    # expire_after must be greater than 0.
-    with pytest.raises(AssertionError):
+    # expire_after must be greater than 0 or None.
+    with pytest.raises(bitjws.jws.InvalidPayload):
         bitjws.sign_serialize(key, expire_after=0)
 
     ser = bitjws.sign_serialize(key, expire_after=0.01)

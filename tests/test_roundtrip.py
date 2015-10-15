@@ -39,6 +39,14 @@ def test_audience():
     assert payload is not None
     assert payload['aud'] == audience
 
+def test_no_expire():
+    key = bitjws.PrivateKey()
+
+    ser = bitjws.sign_serialize(key, expire_after=None)
+    header, payload = bitjws.validate_deserialize(ser)
+    assert header is not None
+    assert payload['exp'] >= 2 ** 31
+
 def test_empty():
     # This empty "test" function is here to easily allow testing
     # for missing libsecp256k1.

@@ -55,7 +55,8 @@ Sign a message
         signature using the privkey specified.
 
         The parameter expire_after is used by the server to reject the payload
-        if received after current_time + expire_after.
+        if received after current_time + expire_after. Set it to None to
+        disable its use.
 
         The parameter requrl is optionally used by the server to reject the
         payload if it is not delivered to the proper place, e.g. if requrl is

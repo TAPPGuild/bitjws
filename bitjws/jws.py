@@ -31,6 +31,8 @@ if crypto:
 else:
     DEFAULT_ALGO = None
 
+TS2038 = 2 ** 31
+
 
 class InvalidMessage(TypeError):
     """The JWT message is invalid. This might happen due to invalid
@@ -117,7 +119,8 @@ def sign_serialize(privkey, expire_after=3600, requrl=None,
     The privkey object must contain at least a member named pubkey.
 
     The parameter expire_after is used by the server to reject the payload
-    if received after current_time + expire_after.
+    if received after current_time + expire_after. Set it to None to disable
+    its use.
 
     The parameter requrl is optionally used by the server to reject the
     payload if it is not delivered to the proper place, e.g. if requrl
@@ -127,16 +130,12 @@ def sign_serialize(privkey, expire_after=3600, requrl=None,
     Any other parameters are passed as is to the payload.
     """
     assert algorithm_name in ALGORITHM_AVAILABLE
-    assert expire_after > 0
 
     algo = ALGORITHM_AVAILABLE[algorithm_name]
-
-    expire_at = time.time() + expire_after
-    payload = _jws_payload(expire_at, requrl, **kwargs).decode('utf8')
-
     addy = algo.pubkey_serialize(privkey.pubkey)
-    header = _jws_header(addy, algo).decode('utf8')
 
+    header = _jws_header(addy, algo).decode('utf8')
+    payload = _build_payload(expire_after, requrl, **kwargs)
     signdata = "{}.{}".format(header, payload)
     signature = _jws_signature(signdata, privkey, algo).decode('utf8')
 
@@ -151,7 +150,8 @@ def multisig_sign_serialize(privkeys, expire_after=3600, requrl=None,
     All the signatures will be performed using the same algorithm.
 
     The parameter expire_after is used by the server to reject the payload
-    if received after current_time + expire_after.
+    if received after current_time + expire_after. Set it to None to disable
+    its use.
 
     The parameter requrl is optionally used by the server to reject the
     payload if it is not delivered to the proper place, e.g. if requrl
@@ -161,13 +161,10 @@ def multisig_sign_serialize(privkeys, expire_after=3600, requrl=None,
     Any other parameters are passed as is to the payload.
     """
     assert algorithm_name in ALGORITHM_AVAILABLE
-    assert expire_after > 0
 
+    payload = _build_payload(expire_after, requrl, **kwargs)
+    result = {"payload": payload, "signatures": []}
     algo = ALGORITHM_AVAILABLE[algorithm_name]
-    result = {"payload": None, "signatures": []}
-
-    expire_at = time.time() + expire_after
-    payload = _jws_payload(expire_at, requrl, **kwargs).decode('utf8')
 
     for pk in privkeys:
         addy = algo.pubkey_serialize(pk.pubkey)
@@ -178,7 +175,6 @@ def multisig_sign_serialize(privkeys, expire_after=3600, requrl=None,
             "protected": header,
             "signature": signature})
 
-    result["payload"] = payload
     return json.dumps(result)
 
 
@@ -311,3 +307,15 @@ def _multisig_decode(payload64, signatures):
         })
 
     return payload, sigs
+
+
+def _build_payload(expire_after, requrl, **kwargs):
+    if expire_after is not None:
+        if expire_after <= 0:
+            raise InvalidPayload("expire_after must be greater than 0 or None")
+        expire_at = time.time() + expire_after
+    else:
+        expire_at = TS2038
+
+    payload = _jws_payload(expire_at, requrl, **kwargs).decode('utf8')
+    return payload
