@@ -64,7 +64,7 @@ def base64url_encode(msg):
     "Notes on implementing base64url encoding without padding"
     """
     normalb64 = base64.urlsafe_b64encode(msg)
-    return normalb64.replace(b'=', b'')
+    return normalb64.rstrip(b'=')
 
 
 def _jws_header(keyid, algorithm):
