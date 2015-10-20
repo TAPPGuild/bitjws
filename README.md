@@ -193,41 +193,41 @@ key = bitjws.PrivateKey(rawkey)</pre></td>
 
   <tr>
     <td></td>
-    <td><sub>eyJ0eXAiOiAiSldUIiwgImtpZCI6ICIxQzZSYzN3MjVWSHVkM2RMRGFtdXRh<br/>
-cWZLV3FockxSVGFEIiwgImFsZyI6ICJDVVNUT00tQklUQ09JTi1TSUdOIn0.<br/>
+    <td><sub>eyJhbGciOiAiQ1VTVE9NLUJJVENPSU4tU0lHTiIsICJraWQiOiAiMUM2UmM<br/>
+zdzI1Vkh1ZDNkTERhbXV0YXFmS1dxaHJMUlRhRCIsICJ0eXAiOiAiSldUIn0.<br/>
 <br/>
 eyJhdWQiOiBudWxsLCAiZXhwIjogMjE0NzQ4MzY0OH0.<br/>
 <br/>
-SVB5eThDMlVkK3BVODI4TWVyZ0E4RnRSMEZsZi9US0tOYm9lYzdVRlJLaGh<br/>
-aeWg0Ti94Y1YvOEFNTFBOYUp1S2hGN2lLUWdEcE93WHNLUEcvZmVjdXdvPQ</sub></td>
+SUptY1VJZXBrSllZMFpxS0FVcStNOUVjK0tWSitUUG13c0MrREMveXhOc0N<br/>
+LRXIvbzJNd3NoMWRubGdsRnI0ZjdrSFQrZ1ZkL25IUkFRMEpDdGx6S0VjPQ</sub></td>
   </tr>
 
 </table>
 
 
-Line breaks were added in the serialization output, but none of those are present. The resulting serialization bytes might differ due to key ordering in the Python dict, but the contents for header and payload must match those shown below, and the signature must be valid for those contents. There are three segments separated by ".": header, payload, and signature, respectively. The segments can be separated by performing `header, payload, signature = ser.split('.')`.
+Line breaks were added in the serialization output, but none of those are present. There are three segments separated by ".": header, payload, and signature, respectively. The segments can be separated by performing `header, payload, signature = ser.split('.')`.
 
 <table>
   <tr>
     <th>Raw header</th>
     <th>Decoded header</th>
   </tr>
-  
+
   <tr>
-    <td><sub>eyJ0eXAiOiAiSldUIiwgImtpZCI6ICIxQzZSYzN3MjVWSHVkM2RMRGFtdXRh<br/>
-cWZLV3FockxSVGFEIiwgImFsZyI6ICJDVVNUT00tQklUQ09JTi1TSUdOIn0</td>
+    <td><sub>eyJhbGciOiAiQ1VTVE9NLUJJVENPSU4tU0lHTiIsICJraWQiOiAiMUM2UmMzdz<br/>
+I1Vkh1ZDNkTERhbXV0YXFmS1dxaHJMUlRhRCIsICJ0eXAiOiAiSldUIn0</td>
     <td><pre lang="python">bitjws.base64url_decode(header.encode('utf8'))</pre></td>
   </tr>
-  
+
   <tr>
     <td></td>
     <td><pre>{
-  "typ": "JWT",
+  "alg": "CUSTOM-BITCOIN-SIGN",
   "kid": "1C6Rc3w25VHud3dLDamutaqfKWqhrLRTaD",
-  "alg": "CUSTOM-BITCOIN-SIGN"
+  "typ": "JWT"
 }</pre></td>
   </tr>
-  
+
 </table>
 
 <table>
@@ -235,12 +235,12 @@ cWZLV3FockxSVGFEIiwgImFsZyI6ICJDVVNUT00tQklUQ09JTi1TSUdOIn0</td>
     <th>Raw payload</th>
     <th>Decoded payload</th>
   </tr>
-  
+
   <tr>
     <td><sub>eyJhdWQiOiBudWxsLCAiZXhwIjogMjE0NzQ4MzY0OH0</td>
     <td><pre lang="python">bitjws.base64url_decode(payload.encode('utf8'))</pre></td>
   </tr>
-  
+
   <tr>
     <td></td>
     <td><pre>{
@@ -248,7 +248,7 @@ cWZLV3FockxSVGFEIiwgImFsZyI6ICJDVVNUT00tQklUQ09JTi1TSUdOIn0</td>
   "exp": 2147483648
 }</pre></td>
   </tr>
-  
+
 </table>
 
 <table>
@@ -256,20 +256,20 @@ cWZLV3FockxSVGFEIiwgImFsZyI6ICJDVVNUT00tQklUQ09JTi1TSUdOIn0</td>
     <th>Raw signature</th>
     <th>Decoded signature</th>
   </tr>
-  
+
   <tr>
-    <td><sub>SVB5eThDMlVkK3BVODI4TWVyZ0E4RnRSMEZsZi9US0tOYm9lYzdVRlJLaGh<br/>
-aeWg0Ti94Y1YvOEFNTFBOYUp1S2hGN2lLUWdEcE93WHNLUEcvZmVjdXdvPQ</sub></td>
+    <td><sub>SUptY1VJZXBrSllZMFpxS0FVcStNOUVjK0tWSitUUG13c0MrREMveXhOc0N<br/>
+LRXIvbzJNd3NoMWRubGdsRnI0ZjdrSFQrZ1ZkL25IUkFRMEpDdGx6S0VjPQ</sub></td>
     <td><pre lang="python">bitjws.base64url_decode(
     signature.encode('utf8'))</pre></td>
   </tr>
-  
+
   <tr>
     <td></td>
-    <td><sub>IPyy8C2Ud+pU828MergA8FtR0Flf/TKKNboec7UFRKhh
-Zyh4N/xcV/8AMLPNaJuKhF7iKQgDpOwXsKPG/fecuwo=</sub></td>
+    <td><sub>IJmcUIepkJYY0ZqKAUq+M9Ec+KVJ+TPmwsC+DC/yxNs
+CKEr/o2Mwsh1dnlglFr4f7kHT+gVd/nHRAQ0JCtlzKEc=</sub></td>
   </tr>
-  
+
 </table>
 
 There is no actual line break in the decoded signature. The decoded signature is the base64 signature produced according to the Bitcoin message signing method.
@@ -281,11 +281,11 @@ Using the same key from the previous section, running `bitjws.multisig_sign_seri
 
 ```
 {
-  "payload": "eyJleHAiOiAyMTQ3NDgzNjQ4LCAiYXVkIjogbnVsbH0",
+  "payload": "eyJhdWQiOiBudWxsLCAiZXhwIjogMjE0NzQ4MzY0OH0",
   "signatures": [
     {
-      "signature": "SDg2MGMrMzNxM0k4VVhDRzErQWFWQlRJSVVSZWN0V2Y1TUJvOTI5R21XOTdUbm5QbFloVWc1RzVKL1lwb0RFd1d2eDNPeWx4TTVhbzZmTmxlTUZTdGpJPQ",
-      "protected": "eyJraWQiOiAiMUM2UmMzdzI1Vkh1ZDNkTERhbXV0YXFmS1dxaHJMUlRhRCIsICJ0eXAiOiAiSldUIiwgImFsZyI6ICJDVVNUT00tQklUQ09JTi1TSUdOIn0"
+      "signature": "SUptY1VJZXBrSllZMFpxS0FVcStNOUVjK0tWSitUUG13c0MrREMveXhOc0NLRXIvbzJNd3NoMWRubGdsRnI0ZjdrSFQrZ1ZkL25IUkFRMEpDdGx6S0VjPQ",
+      "protected": "eyJhbGciOiAiQ1VTVE9NLUJJVENPSU4tU0lHTiIsICJraWQiOiAiMUM2UmMzdzI1Vkh1ZDNkTERhbXV0YXFmS1dxaHJMUlRhRCIsICJ0eXAiOiAiSldUIn0"
     }
   ]
 }

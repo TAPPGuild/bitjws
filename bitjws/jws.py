@@ -77,7 +77,8 @@ def _jws_header(keyid, algorithm):
         'kid': keyid
     }
 
-    return base64url_encode(json.dumps(data).encode('utf8'))
+    datajson = json.dumps(data, sort_keys=True).encode('utf8')
+    return base64url_encode(datajson)
 
 
 def _jws_payload(expire_at, requrl=None, **kwargs):
@@ -98,7 +99,8 @@ def _jws_payload(expire_at, requrl=None, **kwargs):
     }
     data.update(kwargs)
 
-    return base64url_encode(json.dumps(data).encode('utf8'))
+    datajson = json.dumps(data, sort_keys=True).encode('utf8')
+    return base64url_encode(datajson)
 
 
 def _jws_signature(signdata, privkey, algorithm):
