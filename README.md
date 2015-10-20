@@ -282,7 +282,7 @@ Using the same key from the previous section, running `bitjws.multisig_sign_seri
 ```
 {
   "payload": "eyJleHAiOiAyMTQ3NDgzNjQ4LCAiYXVkIjogbnVsbH0",
-  signatures": [
+  "signatures": [
     {
       "signature": "SDg2MGMrMzNxM0k4VVhDRzErQWFWQlRJSVVSZWN0V2Y1TUJvOTI5R21XOTdUbm5QbFloVWc1RzVKL1lwb0RFd1d2eDNPeWx4TTVhbzZmTmxlTUZTdGpJPQ",
       "protected": "eyJraWQiOiAiMUM2UmMzdzI1Vkh1ZDNkTERhbXV0YXFmS1dxaHJMUlRhRCIsICJ0eXAiOiAiSldUIiwgImFsZyI6ICJDVVNUT00tQklUQ09JTi1TSUdOIn0"
