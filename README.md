@@ -1,4 +1,4 @@
-# bitjws [![Build Status](https://travis-ci.org/deginner/bitjws.svg?branch=master)](https://travis-ci.org/deginner/bitjws) [![Coverage Status](https://coveralls.io/repos/g-p-g/bitjws/badge.svg?branch=master&service=github)](https://coveralls.io/github/g-p-g/bitjws?branch=master) [![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/deginner/bitjws?utm_source=share-link&utm_medium=link&utm_campaign=share-link)
+# bitjws [![Build Status](https://travis-ci.org/deginner/bitjws.svg?branch=master)](https://travis-ci.org/deginner/bitjws) [![Coverage Status](https://coveralls.io/repos/deginner/bitjws/badge.svg?branch=master&service=github)](https://coveralls.io/github/deginner/bitjws?branch=master) [![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/deginner/bitjws?utm_source=share-link&utm_medium=link&utm_campaign=share-link)
 
 JWS ([JSON Web Signature](http://self-issued.info/docs/draft-ietf-jose-json-web-signature.html)) using Bitcoin message signing as the algorithm.
 
