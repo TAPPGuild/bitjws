@@ -183,14 +183,12 @@ assert headers['kid'] == '1F26pNMrywyZJdr22jErtKcjF8R3Ttt55G'
     <th>Key input</th>
     <th>Serialization output</th>
   </tr>
-
   <tr>
     <td><pre lang="python">import bitjws
 rawkey = b'\x01' * 32
 key = bitjws.PrivateKey(rawkey)</pre></td>
     <td><pre lang="python">ser = bitjws.sign_serialize(key, expire_after=None)</pre></td>
   </tr>
-
   <tr>
     <td></td>
     <td><sub>eyJhbGciOiAiQ1VTVE9NLUJJVENPSU4tU0lHTiIsICJraWQiOiAiMUM2UmM<br/>
@@ -201,7 +199,6 @@ eyJhdWQiOiBudWxsLCAiZXhwIjogMjE0NzQ4MzY0OH0.<br/>
 SUptY1VJZXBrSllZMFpxS0FVcStNOUVjK0tWSitUUG13c0MrREMveXhOc0N<br/>
 LRXIvbzJNd3NoMWRubGdsRnI0ZjdrSFQrZ1ZkL25IUkFRMEpDdGx6S0VjPQ</sub></td>
   </tr>
-
 </table>
 
 
@@ -212,13 +209,11 @@ Line breaks were added in the serialization output, but none of those are presen
     <th>Raw header</th>
     <th>Decoded header</th>
   </tr>
-
   <tr>
     <td><sub>eyJhbGciOiAiQ1VTVE9NLUJJVENPSU4tU0lHTiIsICJraWQiOiAiMUM2UmMzdz<br/>
 I1Vkh1ZDNkTERhbXV0YXFmS1dxaHJMUlRhRCIsICJ0eXAiOiAiSldUIn0</td>
     <td><pre lang="python">bitjws.base64url_decode(header.encode('utf8'))</pre></td>
   </tr>
-
   <tr>
     <td></td>
     <td><pre>{
@@ -227,7 +222,6 @@ I1Vkh1ZDNkTERhbXV0YXFmS1dxaHJMUlRhRCIsICJ0eXAiOiAiSldUIn0</td>
   "typ": "JWT"
 }</pre></td>
   </tr>
-
 </table>
 
 <table>
@@ -235,12 +229,10 @@ I1Vkh1ZDNkTERhbXV0YXFmS1dxaHJMUlRhRCIsICJ0eXAiOiAiSldUIn0</td>
     <th>Raw payload</th>
     <th>Decoded payload</th>
   </tr>
-
   <tr>
     <td><sub>eyJhdWQiOiBudWxsLCAiZXhwIjogMjE0NzQ4MzY0OH0</td>
     <td><pre lang="python">bitjws.base64url_decode(payload.encode('utf8'))</pre></td>
   </tr>
-
   <tr>
     <td></td>
     <td><pre>{
@@ -248,7 +240,6 @@ I1Vkh1ZDNkTERhbXV0YXFmS1dxaHJMUlRhRCIsICJ0eXAiOiAiSldUIn0</td>
   "exp": 2147483648
 }</pre></td>
   </tr>
-
 </table>
 
 <table>
@@ -256,20 +247,17 @@ I1Vkh1ZDNkTERhbXV0YXFmS1dxaHJMUlRhRCIsICJ0eXAiOiAiSldUIn0</td>
     <th>Raw signature</th>
     <th>Decoded signature</th>
   </tr>
-
   <tr>
     <td><sub>SUptY1VJZXBrSllZMFpxS0FVcStNOUVjK0tWSitUUG13c0MrREMveXhOc0N<br/>
 LRXIvbzJNd3NoMWRubGdsRnI0ZjdrSFQrZ1ZkL25IUkFRMEpDdGx6S0VjPQ</sub></td>
     <td><pre lang="python">bitjws.base64url_decode(
     signature.encode('utf8'))</pre></td>
   </tr>
-
   <tr>
     <td></td>
     <td><sub>IJmcUIepkJYY0ZqKAUq+M9Ec+KVJ+TPmwsC+DC/yxNs
 CKEr/o2Mwsh1dnlglFr4f7kHT+gVd/nHRAQ0JCtlzKEc=</sub></td>
   </tr>
-
 </table>
 
 There is no actual line break in the decoded signature. The decoded signature is the base64 signature produced according to the Bitcoin message signing method.

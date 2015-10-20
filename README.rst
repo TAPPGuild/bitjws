@@ -1,5 +1,5 @@
-bitjws |Build Status| |Coverage Status|
-=======================================
+bitjws |Build Status| |Coverage Status| |Gitter|
+================================================
 
 JWS (`JSON Web
 Signature <http://self-issued.info/docs/draft-ietf-jose-json-web-signature.html>`__)
@@ -205,7 +205,138 @@ mentioned above and uses a sample key for a complete example.
     print(headers, payload)
     assert headers['kid'] == '1F26pNMrywyZJdr22jErtKcjF8R3Ttt55G'
 
-.. |Build Status| image:: https://travis-ci.org/g-p-g/bitjws.svg?branch=master
-   :target: https://travis-ci.org/g-p-g/bitjws
-.. |Coverage Status| image:: https://coveralls.io/repos/g-p-g/bitjws/badge.svg?branch=master&service=github
-   :target: https://coveralls.io/github/g-p-g/bitjws?branch=master
+Input/Output: single key
+------------------------
+
+.. raw:: html
+
+   <table>
+     <tr>
+       <th>Key input</th>
+       <th>Serialization output</th>
+     </tr>
+     <tr>
+       <td><pre lang="python">import bitjws
+   rawkey = b'\x01' * 32
+   key = bitjws.PrivateKey(rawkey)</pre></td>
+       <td><pre lang="python">ser = bitjws.sign_serialize(key, expire_after=None)</pre></td>
+     </tr>
+     <tr>
+       <td></td>
+       <td><sub>eyJhbGciOiAiQ1VTVE9NLUJJVENPSU4tU0lHTiIsICJraWQiOiAiMUM2UmM<br/>
+   zdzI1Vkh1ZDNkTERhbXV0YXFmS1dxaHJMUlRhRCIsICJ0eXAiOiAiSldUIn0.<br/>
+   <br/>
+   eyJhdWQiOiBudWxsLCAiZXhwIjogMjE0NzQ4MzY0OH0.<br/>
+   <br/>
+   SUptY1VJZXBrSllZMFpxS0FVcStNOUVjK0tWSitUUG13c0MrREMveXhOc0N<br/>
+   LRXIvbzJNd3NoMWRubGdsRnI0ZjdrSFQrZ1ZkL25IUkFRMEpDdGx6S0VjPQ</sub></td>
+     </tr>
+   </table>
+
+Line breaks were added in the serialization output, but none of those
+are present. There are three segments separated by ".": header, payload,
+and signature, respectively. The segments can be separated by performing
+``header, payload, signature = ser.split('.')``.
+
+.. raw:: html
+
+   <table>
+     <tr>
+       <th>Raw header</th>
+       <th>Decoded header</th>
+     </tr>
+     <tr>
+       <td><sub>eyJhbGciOiAiQ1VTVE9NLUJJVENPSU4tU0lHTiIsICJraWQiOiAiMUM2UmMzdz<br/>
+   I1Vkh1ZDNkTERhbXV0YXFmS1dxaHJMUlRhRCIsICJ0eXAiOiAiSldUIn0</td>
+       <td><pre lang="python">bitjws.base64url_decode(header.encode('utf8'))</pre></td>
+     </tr>
+     <tr>
+       <td></td>
+       <td><pre>{
+     "alg": "CUSTOM-BITCOIN-SIGN",
+     "kid": "1C6Rc3w25VHud3dLDamutaqfKWqhrLRTaD",
+     "typ": "JWT"
+   }</pre></td>
+     </tr>
+   </table>
+
+.. raw:: html
+
+   <table>
+     <tr>
+       <th>Raw payload</th>
+       <th>Decoded payload</th>
+     </tr>
+     <tr>
+       <td><sub>eyJhdWQiOiBudWxsLCAiZXhwIjogMjE0NzQ4MzY0OH0</td>
+       <td><pre lang="python">bitjws.base64url_decode(payload.encode('utf8'))</pre></td>
+     </tr>
+     <tr>
+       <td></td>
+       <td><pre>{
+     "aud": null,
+     "exp": 2147483648
+   }</pre></td>
+     </tr>
+   </table>
+
+.. raw:: html
+
+   <table>
+     <tr>
+       <th>Raw signature</th>
+       <th>Decoded signature</th>
+     </tr>
+     <tr>
+       <td><sub>SUptY1VJZXBrSllZMFpxS0FVcStNOUVjK0tWSitUUG13c0MrREMveXhOc0N<br/>
+   LRXIvbzJNd3NoMWRubGdsRnI0ZjdrSFQrZ1ZkL25IUkFRMEpDdGx6S0VjPQ</sub></td>
+       <td><pre lang="python">bitjws.base64url_decode(
+       signature.encode('utf8'))</pre></td>
+     </tr>
+     <tr>
+       <td></td>
+       <td><sub>IJmcUIepkJYY0ZqKAUq+M9Ec+KVJ+TPmwsC+DC/yxNs
+   CKEr/o2Mwsh1dnlglFr4f7kHT+gVd/nHRAQ0JCtlzKEc=</sub></td>
+     </tr>
+   </table>
+
+There is no actual line break in the decoded signature. The decoded
+signature is the base64 signature produced according to the Bitcoin
+message signing method.
+
+Input/Output: multisig
+----------------------
+
+Using the same key from the previous section, running
+``bitjws.multisig_sign_serialize([key], expire_after=None)`` resuts in
+the following output:
+
+::
+
+    {
+      "payload": "eyJhdWQiOiBudWxsLCAiZXhwIjogMjE0NzQ4MzY0OH0",
+      "signatures": [
+        {
+          "signature": "SUptY1VJZXBrSllZMFpxS0FVcStNOUVjK0tWSitUUG13c0MrREMveXhOc0NLRXIvbzJNd3NoMWRubGdsRnI0ZjdrSFQrZ1ZkL25IUkFRMEpDdGx6S0VjPQ",
+          "protected": "eyJhbGciOiAiQ1VTVE9NLUJJVENPSU4tU0lHTiIsICJraWQiOiAiMUM2UmMzdzI1Vkh1ZDNkTERhbXV0YXFmS1dxaHJMUlRhRCIsICJ0eXAiOiAiSldUIn0"
+        }
+      ]
+    }
+
+This is a different format from the one used for single key signing. The
+format now is defined as "general JSON serialization" in the JWS spec,
+and is used to store a list of signatures and headers. The headers are
+stored in the "protected" fields, which means their values are integrity
+protected (i.e. the signature takes them into account). Decoding the
+values for ``payload``, ``signatures[0]["signature"]``,
+``signatures[0]["protected"]`` is done using the same
+``bitjws.base64url_decode`` function used earlier. The number of
+signatures corresponds to the number of keys passed to
+``bitjws.multisig_sign_serialize``.
+
+.. |Build Status| image:: https://travis-ci.org/deginner/bitjws.svg?branch=master
+   :target: https://travis-ci.org/deginner/bitjws
+.. |Coverage Status| image:: https://coveralls.io/repos/deginner/bitjws/badge.svg?branch=master&service=github
+   :target: https://coveralls.io/github/deginner/bitjws?branch=master
+.. |Gitter| image:: https://badges.gitter.im/Join%20Chat.svg
+   :target: https://gitter.im/deginner/bitjws?utm_source=share-link&utm_medium=link&utm_campaign=share-link
