@@ -22,7 +22,7 @@ readme = readme[:top] + more.format(url) + readme[bottom:]
 
 setup(
     name="bitjws",
-    version="0.6.2",
+    version="0.6.3",
     description='JWS using Bitcoin message signing',
     long_description=readme,
     author='Guilherme Polo',

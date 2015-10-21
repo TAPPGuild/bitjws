@@ -67,13 +67,18 @@ header, payload = bitjws.validate_deserialize(data)
 `validate_deserialize` may raise `bitjws.InvalidMessage` or `bitwjs.InvalidPayload`. Function definition:
 
 ```python
-def validate_deserialize(rawmsg, requrl=None, check_expiration=True):
+def validate_deserialize(rawmsg, requrl=None, check_expiration=True,
+                         decode_payload=True):
     """
     Validate a JWT compact serialization and return the header and
     payload if the signature is good.
 
     If check_expiration is False, the payload will be accepted even if
     expired.
+
+    If decode_payload is True then this function will attempt to decode
+    it as JSON, otherwise the raw payload will be returned. Note that
+    it is always decoded from base64url.
     """
 ```
 
@@ -260,7 +265,7 @@ CKEr/o2Mwsh1dnlglFr4f7kHT+gVd/nHRAQ0JCtlzKEc=</sub></td>
   </tr>
 </table>
 
-There is no actual line break in the decoded signature. The decoded signature is the base64 signature produced according to the Bitcoin message signing method.
+There are no line breaks in the decoded signature, they were added to make it easier to notice the different segments. The decoded signature is the base64 signature produced according to the Bitcoin message signing method.
 
 
 ## Input/Output: multisig
@@ -279,4 +284,4 @@ Using the same key from the previous section, running `bitjws.multisig_sign_seri
 }
 ```
 
-This is a different format from the one used for single key signing. The format now is defined as "general JSON serialization" in the JWS spec, and is used to store a list of signatures and headers. The headers are stored in the "protected" fields, which means their values are integrity protected (i.e. the signature takes them into account). Decoding the values for `payload`, `signatures[0]["signature"]`, `signatures[0]["protected"]` is done using the same `bitjws.base64url_decode` function used earlier. The number of signatures corresponds to the number of keys passed to `bitjws.multisig_sign_serialize`.
+This is a different format from the one used for single key signing. This format is defined as "general JSON serialization" in the JWS spec, and is used to store a list of signatures and headers. The headers are stored in the "protected" fields, which means their values are integrity protected (i.e. the signature takes them into account). Decoding the values for `payload`, `signatures[0]["signature"]`, `signatures[0]["protected"]` is done using the same `bitjws.base64url_decode` function used earlier. The number of signatures corresponds to the number of keys passed to `bitjws.multisig_sign_serialize`.

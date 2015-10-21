@@ -1,6 +1,7 @@
 import json
 import time
 import bitjws
+import pytest
 
 def test_encode_decode():
     key = bitjws.PrivateKey()
@@ -46,6 +47,30 @@ def test_no_expire():
     header, payload = bitjws.validate_deserialize(ser)
     assert header is not None
     assert payload['exp'] >= 2 ** 31
+
+def test_payload_nojson():
+    key = bitjws.PrivateKey()
+
+    ser = bitjws.sign_serialize(key)
+    header64 = ser.split('.')[0]
+
+    # Sign a new payload, 'test'
+    new_payload = bitjws.base64url_encode(b'test').decode('utf8')
+    signdata = '{}.{}'.format(header64, new_payload)
+    sig = bitjws.ALGORITHM_AVAILABLE['CUSTOM-BITCOIN-SIGN'].sign(
+        key, signdata)
+    sig64 = bitjws.base64url_encode(sig).decode('utf8')
+
+    new = '{}.{}'.format(signdata, sig64)
+    with pytest.raises(bitjws.InvalidMessage):
+        # The new payload was not JSON encoded, so it cannot be
+        # decoded as that.
+        bitjws.validate_deserialize(new)
+    # But we can get its raw value.
+    header, payload = bitjws.validate_deserialize(new, decode_payload=False)
+
+    assert header is not None
+    assert payload == b'test'
 
 def test_empty():
     # This empty "test" function is here to easily allow testing

@@ -1,4 +1,5 @@
 import json
+import pytest
 import bitjws
 
 def test_encode_decode():
@@ -28,3 +29,29 @@ def test_encode_decode():
     assert payload['aud'] is None
     assert len(payload) == 2
     assert payload == json.loads(origpayload.decode('utf8'))
+
+def test_payload_nojson():
+    key = bitjws.PrivateKey()
+
+    # Use a payload that is not JSON encoded.
+    ser = json.loads(bitjws.multisig_sign_serialize([key]))
+    ser['payload'] = bitjws.base64url_encode(b'test').decode('utf8')
+
+    # Sign the new payload.
+    signdata = '{}.{}'.format(ser['signatures'][0]['protected'], ser['payload'])
+    sig = bitjws.ALGORITHM_AVAILABLE['CUSTOM-BITCOIN-SIGN'].sign(
+        key, signdata)
+    sig64 = bitjws.base64url_encode(sig).decode('utf8')
+    ser['signatures'][0]['signature'] = sig64
+
+    serenc = json.dumps(ser)
+    with pytest.raises(bitjws.InvalidMessage):
+        # The new payload was not JSON encoded, so it cannot be
+        # decoded as that.
+        bitjws.multisig_validate_deserialize(serenc)
+    # But we can get its raw value.
+    headers, payload = bitjws.multisig_validate_deserialize(serenc,
+        decode_payload=False)
+
+    assert len(headers) == 1
+    assert payload == b'test'

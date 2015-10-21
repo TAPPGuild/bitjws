@@ -181,6 +181,7 @@ def multisig_sign_serialize(privkeys, expire_after=3600, requrl=None,
 
 
 def multisig_validate_deserialize(rawmsg, requrl=None, check_expiration=True,
+                                  decode_payload=True,
                                   algorithm_name=DEFAULT_ALGO):
     """
     Validate a general JSON serialization and return the headers and
@@ -188,6 +189,10 @@ def multisig_validate_deserialize(rawmsg, requrl=None, check_expiration=True,
 
     If check_expiration is False, the payload will be accepted even if
     expired.
+
+    If decode_payload is True then this function will attempt to decode
+    it as JSON, otherwise the raw payload will be returned. Note that
+    it is always decoded from base64url.
     """
     assert algorithm_name in ALGORITHM_AVAILABLE
 
@@ -202,7 +207,7 @@ def multisig_validate_deserialize(rawmsg, requrl=None, check_expiration=True,
         raise InvalidMessage('no signatures')
 
     try:
-        payload, sigs = _multisig_decode(payload64, signatures)
+        payload, sigs = _multisig_decode(payload64, signatures, decode_payload)
     except Exception as err:
         raise InvalidMessage(str(err))
 
@@ -217,18 +222,23 @@ def multisig_validate_deserialize(rawmsg, requrl=None, check_expiration=True,
     if not all_valid:
         return None, None
 
-    _verify_payload(payload, check_expiration, requrl)
+    if decode_payload:
+        _verify_payload(payload, check_expiration, requrl)
     return [entry['header'] for entry in sigs], payload
 
 
 def validate_deserialize(rawmsg, requrl=None, check_expiration=True,
-                         algorithm_name=DEFAULT_ALGO):
+                         decode_payload=True, algorithm_name=DEFAULT_ALGO):
     """
     Validate a JWT compact serialization and return the header and
     payload if the signature is good.
 
     If check_expiration is False, the payload will be accepted even if
     expired.
+
+    If decode_payload is True then this function will attempt to decode
+    it as JSON, otherwise the raw payload will be returned. Note that
+    it is always decoded from base64url.
     """
     assert algorithm_name in ALGORITHM_AVAILABLE
     algo = ALGORITHM_AVAILABLE[algorithm_name]
@@ -243,7 +253,10 @@ def validate_deserialize(rawmsg, requrl=None, check_expiration=True,
         payload_data = base64url_decode(payload64.encode('utf8'))
         header_data = base64url_decode(header64.encode('utf8'))
         header = json.loads(header_data.decode('utf8'))
-        payload = json.loads(payload_data.decode('utf8'))
+        if decode_payload:
+            payload = json.loads(payload_data.decode('utf8'))
+        else:
+            payload = payload_data
     except Exception as err:
         raise InvalidMessage(str(err))
 
@@ -256,11 +269,12 @@ def validate_deserialize(rawmsg, requrl=None, check_expiration=True,
     except Exception as err:
         raise InvalidMessage('failed to verify signature: {}'.format(err))
 
-    if valid:
-        _verify_payload(payload, check_expiration, requrl)
-        return header, payload
-    else:
+    if not valid:
         return None, None
+
+    if decode_payload:
+        _verify_payload(payload, check_expiration, requrl)
+    return header, payload
 
 
 def _verify_signature(data, header, signature, algorithm):
@@ -288,9 +302,12 @@ def _verify_payload(payload, check_expiration, url=None):
             url, audience))
 
 
-def _multisig_decode(payload64, signatures):
+def _multisig_decode(payload64, signatures, decode_payload):
     payload_data = base64url_decode(payload64.encode('utf8'))
-    payload = json.loads(payload_data.decode('utf8'))
+    if decode_payload:
+        payload = json.loads(payload_data.decode('utf8'))
+    else:
+        payload = payload_data
     sigs = []
 
     for entry in signatures:
