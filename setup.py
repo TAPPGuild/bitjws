@@ -22,7 +22,7 @@ readme = readme[:top] + more.format(url) + readme[bottom:]
 
 setup(
     name="bitjws",
-    version="0.6.3",
+    version="0.6.3.1",
     description='JWS using Bitcoin message signing',
     long_description=readme,
     author='Guilherme Polo',
@@ -33,6 +33,6 @@ setup(
     include_package_data=True,
     packages=['bitjws'],
     setup_requires=['pytest-runner'],
-    install_requires=['base58', 'secp256k1'],
+    install_requires=['base58', 'secp256k1==0.11'],
     tests_require=['pytest', 'pytest-cov']
 )

@@ -16,15 +16,15 @@ addons:
 before_install:
   - git clone git://github.com/bitcoin/secp256k1.git libsecp256k1
   - pushd libsecp256k1
+  - git checkout d7eb1ae96dfe9d497a26b3e7ff8b6f58e61e400a
   - ./autogen.sh
   - ./configure --enable-module-recovery --enable-module-ecdh --enable-module-schnorr
   - make
   - popd
   - pip install -U coveralls
-  - INCLUDE_DIR=$(readlink -f ./libsecp256k1/include) LIB_DIR=$(readlink -f ./libsecp256k1/.libs) pip install secp256k1
 
 install:
-  - python setup.py -q install
+  - INCLUDE_DIR=$(readlink -f ./libsecp256k1/include) LIB_DIR=$(readlink -f ./libsecp256k1/.libs) python setup.py -q install
 
 script:
   - LD_LIBRARY_PATH=$(readlink -f ./libsecp256k1/.libs) python setup.py pytest --addopts --cov=bitjws
