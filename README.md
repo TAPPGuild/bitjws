@@ -9,6 +9,20 @@ By default it's expected that [secp256k1](https://github.com/bitcoin/secp256k1) 
 
 bitjws can be installed by running `pip install bitjws`.
 
+##### Building secp256k1
+
+In case you need to install the `secp256k1` C library, the following sequence of commands is recommended. If you already have `secp256k1`, make sure it was compiled from the expected git commit or it might fail to work due to API incompatibilities.
+
+```
+git clone git://github.com/bitcoin/secp256k1.git libsecp256k1
+cd libsecp256k1
+git checkout d7eb1ae96dfe9d497a26b3e7ff8b6f58e61e400a
+./autogen.sh
+./configure --enable-module-recovery
+make
+sudo make install
+```
+
 
 ## Usage
 
